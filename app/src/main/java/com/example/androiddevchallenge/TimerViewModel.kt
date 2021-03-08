@@ -9,7 +9,7 @@ class TimerViewModel : ViewModel() {
 
     var startTime = 10000L
     var interval = 1000L
-    var isTimerRunnung = false
+    var isTimerRunning = false
     var countDownTimer: CountDownTimer
 
     private var _timeLeftInMilli = MutableLiveData(startTime)

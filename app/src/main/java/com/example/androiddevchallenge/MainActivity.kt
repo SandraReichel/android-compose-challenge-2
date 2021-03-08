@@ -26,58 +26,72 @@ import androidx.compose.material.MaterialTheme
 import androidx.compose.material.OutlinedTextField
 import androidx.compose.material.Surface
 import androidx.compose.material.Text
-
-import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.*
 import androidx.compose.runtime.livedata.observeAsState
-import androidx.compose.runtime.getValue
-
-import androidx.compose.runtime.mutableStateOf
-
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.example.androiddevchallenge.ui.theme.MyTheme
-import android.os.CountDownTimer
-import androidx.compose.runtime.*
-import androidx.lifecycle.LiveData
-import androidx.lifecycle.MutableLiveData
-import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
+import com.example.androiddevchallenge.ui.theme.MyTheme
 
 
 class MainActivity : AppCompatActivity() {
 
-    val timerViewModel = ViewModelProvider(this).get(TimerViewModel::class.java)
+    private lateinit var timerViewModel: TimerViewModel
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        timerViewModel = ViewModelProvider(this).get(TimerViewModel::class.java)
+
         setContent {
             MyTheme {
-                TimerApp(timerViewModel)
+                MyApp(timerViewModel)
             }
         }
     }
 }
 
+// Start building your app here!
 @Composable
-fun HelloScreen(viewModel: TimerViewModel) {
-    val name by viewModel.name.observeAsState("")
-    HelloContent(name = name, onNameChange = { viewModel.onNameChange(it) })
+fun MyApp(viewModel: TimerViewModel) {
+    Surface(color = MaterialTheme.colors.background) {
+        TimerScreen(viewModel = viewModel)
+        Text(text = "Ready... Set... GO!")
+    }
 }
 
 @Composable
-fun HelloScreen2() {
-
-    var timeLeftInMills by rememberSaveable { mutableStateOf(startTime) }
-
-    HelloContent(name = timeLeftInMills.toString(), onNameChange = { name = it })
+fun TimerScreen(viewModel: TimerViewModel) {
+    val timeLeftInMillis by viewModel.timeLeftInMills.observeAsState(viewModel.startTime)
+    TimerControlView(
+        timeLeftInMillis = timeLeftInMillis,
+        changeRunningState = { viewModel.isTimerRunning = it },
+        changeStartTime = { viewModel.startTime = it }
+    )
 }
 
 @Composable
-fun HelloContent(name: String, onNameChange: (String) -> Unit) {
+fun TimerControlView(timeLeftInMillis: Long, changeRunningState: (Boolean) -> Unit, changeStartTime: (Long) -> Unit){
+    Column(modifier = Modifier.padding(16.dp)) {
+        Text(
+            text = "Time left is: , $timeLeftInMillis",
+            modifier = Modifier.padding(bottom = 8.dp),
+            style = MaterialTheme.typography.h5
+        )
+        OutlinedTextField(
+            value = timeLeftInMillis.toString(),
+            onValueChange = { changeStartTime(10000L) },
+            label = { Text("Change Time") }
+        )
+    }
+}
+
+
+@Composable
+fun HelloContent2(name: String, onNameChange: (String) -> Unit) {
     Column(modifier = Modifier.padding(16.dp)) {
         Text(
             text = "Hello, $name",
@@ -94,71 +108,38 @@ fun HelloContent(name: String, onNameChange: (String) -> Unit) {
 
 
 @Composable
-fun HelloContent2(name: String, onNameChange: (String) -> Unit) {
-    Column(modifier = Modifier.padding(16.dp)) {
-        Text(
-            text = "Hello, $name",
-            modifier = Modifier.padding(bottom = 8.dp),
-            style = MaterialTheme.typography.h5
+fun SandClock() {
+    Canvas(modifier = Modifier.fillMaxSize()){
+        val canvasWidth = size.width
+        val canvasHeight = size.height
+
+        /* drawCircle(
+             color = Color.Blue,
+             center = Offset(x = canvasWidth / 2, y = canvasHeight / 2),
+             radius = size.minDimension / 4
+         )*/
+
+        drawLine(
+            start = Offset(x=canvasWidth / 2, y = canvasHeight /2),
+            end = Offset(x = (canvasWidth / 2) - (canvasWidth / 3), y = ((canvasHeight / 2) + (canvasHeight / 3))),
+            color = Color.Blue,
+            strokeWidth = 5F
         )
-        /*OutlinedTextField(
-            value = name,
-            onValueChange = { onNameChange(it) },
-            label = { Text("Name") }
-        )*/
+
+        drawLine(
+            start = Offset(x=canvasWidth / 2, y = canvasHeight /2),
+            end = Offset(x = ((canvasWidth / 2) + (canvasWidth / 3)), y = ((canvasHeight / 2) + (canvasHeight / 3))),
+            color = Color.Blue,
+            strokeWidth = 5F
+        )
     }
 }
-
-
-
-// Start building your app here!
-@Composable
-fun MyApp() {
-    Surface(color = MaterialTheme.colors.background) {
-
-HelloScreen()
-
-
-        Text(text = "Ready... Set... GO!")
-
-        Canvas(modifier = Modifier.fillMaxSize()){
-            val canvasWidth = size.width
-            val canvasHeight = size.height
-
-           /* drawCircle(
-                color = Color.Blue,
-                center = Offset(x = canvasWidth / 2, y = canvasHeight / 2),
-                radius = size.minDimension / 4
-            )*/
-
-            drawLine(
-                start = Offset(x=canvasWidth / 2, y = canvasHeight /2),
-                end = Offset(x = (canvasWidth / 2) - (canvasWidth / 3), y = ((canvasHeight / 2) + (canvasHeight / 3))),
-                color = Color.Blue,
-                strokeWidth = 5F
-            )
-
-            drawLine(
-                start = Offset(x=canvasWidth / 2, y = canvasHeight /2),
-                end = Offset(x = ((canvasWidth / 2) + (canvasWidth / 3)), y = ((canvasHeight / 2) + (canvasHeight / 3))),
-                color = Color.Blue,
-                strokeWidth = 5F
-            )
-
-            (canvasWidth / 2)
-
-
-        }
-    }
-}
-
-
 
 @Preview("Light Theme", widthDp = 360, heightDp = 640)
 @Composable
 fun LightPreview() {
     MyTheme {
-        MyApp()
+        MyApp(TimerViewModel())
     }
 }
 
@@ -166,6 +147,6 @@ fun LightPreview() {
 @Composable
 fun DarkPreview() {
     MyTheme(darkTheme = true) {
-        MyApp()
+        MyApp(TimerViewModel())
     }
 }
