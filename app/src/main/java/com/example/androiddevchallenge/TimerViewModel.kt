@@ -5,6 +5,11 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 
+data class TimerStatus(
+    var currentTime: Long,
+    var isTimerRunning: Boolean
+)
+
 class TimerViewModel : ViewModel() {
 
     var startTime = 10000L
@@ -12,13 +17,13 @@ class TimerViewModel : ViewModel() {
     var isTimerRunning = false
     var countDownTimer: CountDownTimer
 
-    private var _timeLeftInMilli = MutableLiveData(startTime)
-    val timeLeftInMills: LiveData<Long> = _timeLeftInMilli
+    private var _timeLeftInMilli = MutableLiveData(TimerStatus(startTime, false))
+    val timeLeftInMills: LiveData<TimerStatus> = _timeLeftInMilli
 
     init {
         countDownTimer = object : CountDownTimer(startTime, interval) {
             override fun onTick(millisUntilFinished: Long) {
-                _timeLeftInMilli.postValue(millisUntilFinished / interval)
+                _timeLeftInMilli.postValue(_timeLeftInMilli.value?.apply { currentTime = millisUntilFinished / interval })
             }
 
             override fun onFinish() {

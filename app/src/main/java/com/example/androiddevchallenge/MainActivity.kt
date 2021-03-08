@@ -19,13 +19,15 @@ import android.os.Bundle
 import androidx.activity.compose.setContent
 import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.foundation.Canvas
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
-import androidx.compose.material.MaterialTheme
-import androidx.compose.material.OutlinedTextField
-import androidx.compose.material.Surface
-import androidx.compose.material.Text
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.*
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.filled.Pause
+import androidx.compose.material.icons.filled.PauseCircleOutline
+import androidx.compose.material.icons.filled.PlayCircleOutline
 import androidx.compose.runtime.*
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Modifier
@@ -65,7 +67,13 @@ fun MyApp(viewModel: TimerViewModel) {
 
 @Composable
 fun TimerScreen(viewModel: TimerViewModel) {
-    val timeLeftInMillis by viewModel.timeLeftInMills.observeAsState(viewModel.startTime)
+    val timeLeftInMillis by viewModel.timeLeftInMills.observeAsState(
+        TimerStatus(
+            viewModel.startTime,
+            false
+        )
+    )
+
     TimerControlView(
         timeLeftInMillis = timeLeftInMillis,
         changeRunningState = { viewModel.isTimerRunning = it },
@@ -74,7 +82,11 @@ fun TimerScreen(viewModel: TimerViewModel) {
 }
 
 @Composable
-fun TimerControlView(timeLeftInMillis: Long, changeRunningState: (Boolean) -> Unit, changeStartTime: (Long) -> Unit){
+fun TimerControlView(
+    timeLeftInMillis: TimerStatus,
+    changeRunningState: (Boolean) -> Unit,
+    changeStartTime: (Long) -> Unit
+) {
     Column(modifier = Modifier.padding(16.dp)) {
         Text(
             text = "Time left is: , $timeLeftInMillis",
@@ -86,6 +98,16 @@ fun TimerControlView(timeLeftInMillis: Long, changeRunningState: (Boolean) -> Un
             onValueChange = { changeStartTime(10000L) },
             label = { Text("Change Time") }
         )
+        Button(onClick = {}) {
+            Row() {
+                val icon =
+                    Icon(
+                        if (timeLeftInMillis.isTimerRunning) Icons.Filled.PauseCircleOutline else Icons.Filled.PlayCircleOutline,
+                        contentDescription = null
+                    )
+                Text(" Adopt Now")
+            }
+        }
     }
 }
 
@@ -109,7 +131,7 @@ fun HelloContent2(name: String, onNameChange: (String) -> Unit) {
 
 @Composable
 fun SandClock() {
-    Canvas(modifier = Modifier.fillMaxSize()){
+    Canvas(modifier = Modifier.fillMaxSize()) {
         val canvasWidth = size.width
         val canvasHeight = size.height
 
@@ -120,20 +142,46 @@ fun SandClock() {
          )*/
 
         drawLine(
-            start = Offset(x=canvasWidth / 2, y = canvasHeight /2),
-            end = Offset(x = (canvasWidth / 2) - (canvasWidth / 3), y = ((canvasHeight / 2) + (canvasHeight / 3))),
+            start = Offset(x = canvasWidth / 2, y = canvasHeight / 2),
+            end = Offset(
+                x = (canvasWidth / 2) - (canvasWidth / 3),
+                y = ((canvasHeight / 2) + (canvasHeight / 3))
+            ),
             color = Color.Blue,
             strokeWidth = 5F
         )
 
         drawLine(
-            start = Offset(x=canvasWidth / 2, y = canvasHeight /2),
-            end = Offset(x = ((canvasWidth / 2) + (canvasWidth / 3)), y = ((canvasHeight / 2) + (canvasHeight / 3))),
+            start = Offset(x = canvasWidth / 2, y = canvasHeight / 2),
+            end = Offset(
+                x = ((canvasWidth / 2) + (canvasWidth / 3)),
+                y = ((canvasHeight / 2) + (canvasHeight / 3))
+            ),
             color = Color.Blue,
             strokeWidth = 5F
         )
     }
+
+    Row {
+        Card(
+            elevation = 8.dp, shape = RoundedCornerShape(10.dp),
+            modifier = Modifier
+                //.clickable(onClick = onClick)
+                .padding(start = 16.dp, end = 16.dp, top = 8.dp, bottom = 8.dp)
+                .fillMaxWidth()
+        ) {
+
+            Column(
+                modifier = Modifier
+                    .padding(8.dp)
+                    .fillMaxWidth()
+            ) {
+                //NameTag(cat = cat)}}}
+            }
+        }
+    }
 }
+
 
 @Preview("Light Theme", widthDp = 360, heightDp = 640)
 @Composable
