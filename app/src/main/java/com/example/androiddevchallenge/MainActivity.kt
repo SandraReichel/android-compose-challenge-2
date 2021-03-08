@@ -23,10 +23,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.PauseCircleOutline
-import androidx.compose.material.icons.filled.Pets
-import androidx.compose.material.icons.filled.PlayCircleOutline
-import androidx.compose.material.icons.filled.Timelapse
+import androidx.compose.material.icons.filled.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
@@ -108,15 +105,23 @@ fun TimerControlView(
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
             Text(
-                text = "Time left is: , $timeLeftInMillis",
+                text = "Time left is: , ${timeLeftInMillis.currentTime}",
                 modifier = Modifier.padding(bottom = 8.dp),
                 style = MaterialTheme.typography.h5
             )
+            Spacer(Modifier.padding(8.dp))
             OutlinedTextField(
-                value = timeLeftInMillis.toString(),
+                value = timeLeftInMillis.currentTime.toString(),
                 onValueChange = { changeStartTime(10000L) },
-                label = { Text("Change Time") }
+                label = { Row() {
+                    Text("Change Time")
+                    Icon(
+                        Icons.Filled.Check,
+                        contentDescription = null
+                    )
+                } }
             )
+            Spacer(Modifier.padding(8.dp))
             Button(onClick = { changeRunningState() }) {
                 Row {
                     val icon =
@@ -162,25 +167,6 @@ fun SandClock() {
             color = Color.Blue,
             strokeWidth = 5F
         )
-    }
-
-    Row {
-        Card(
-            elevation = 8.dp, shape = RoundedCornerShape(10.dp),
-            modifier = Modifier
-                //.clickable(onClick = onClick)
-                .padding(start = 16.dp, end = 16.dp, top = 8.dp, bottom = 8.dp)
-                .fillMaxWidth()
-        ) {
-
-            Column(
-                modifier = Modifier
-                    .padding(8.dp)
-                    .fillMaxWidth()
-            ) {
-                //NameTag(cat = cat)}}}
-            }
-        }
     }
 }
 

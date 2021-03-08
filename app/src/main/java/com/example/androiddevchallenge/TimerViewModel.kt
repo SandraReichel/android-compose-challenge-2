@@ -33,7 +33,14 @@ class TimerViewModel : ViewModel() {
     }
 
     fun switchTimerRunning() {
-        _timeLeftInMilli.postValue(_timeLeftInMilli.value?.apply { isTimerRunning = !isTimerRunning })
+        _timeLeftInMilli.value?.apply {
+            if (isTimerRunning) {
+                countDownTimer.cancel()
+                _timeLeftInMilli.postValue(TimerStatus(this.currentTime, false))
+            } else {
+                countDownTimer.start()
+                _timeLeftInMilli.postValue(TimerStatus(this.currentTime, true))
+            }
+        }
     }
-
 }
