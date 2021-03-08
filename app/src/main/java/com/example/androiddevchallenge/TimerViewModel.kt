@@ -13,8 +13,8 @@ data class TimerStatus(
 class TimerViewModel : ViewModel() {
 
     var startTime = 10000L
-    var interval = 1000L
-    var isTimerRunning = false
+    private val interval = 1000L
+    private var isTimerRunning = false
     var countDownTimer: CountDownTimer
 
     private var _timeLeftInMilli = MutableLiveData(TimerStatus(startTime, false))
@@ -31,4 +31,9 @@ class TimerViewModel : ViewModel() {
             }
         }
     }
+
+    fun switchTimerRunning() {
+        _timeLeftInMilli.postValue(_timeLeftInMilli.value?.apply { isTimerRunning = !isTimerRunning })
+    }
+
 }

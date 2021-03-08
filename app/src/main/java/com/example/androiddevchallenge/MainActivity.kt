@@ -19,17 +19,18 @@ import android.os.Bundle
 import androidx.activity.compose.setContent
 import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.foundation.Canvas
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Favorite
-import androidx.compose.material.icons.filled.Pause
 import androidx.compose.material.icons.filled.PauseCircleOutline
+import androidx.compose.material.icons.filled.Pets
 import androidx.compose.material.icons.filled.PlayCircleOutline
-import androidx.compose.runtime.*
+import androidx.compose.material.icons.filled.Timelapse
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
@@ -60,8 +61,19 @@ class MainActivity : AppCompatActivity() {
 @Composable
 fun MyApp(viewModel: TimerViewModel) {
     Surface(color = MaterialTheme.colors.background) {
-        TimerScreen(viewModel = viewModel)
-        Text(text = "Ready... Set... GO!")
+        Column(
+            horizontalAlignment = Alignment.End, modifier = Modifier.fillMaxWidth()
+        ) {
+            TopAppBar(
+                title = {
+                    Row {
+                        Text(text = "Flippy, Sandy Timer")
+                        Icon(Icons.Filled.Timelapse, contentDescription = null)
+                    }
+                }
+            )
+            TimerScreen(viewModel = viewModel)
+        }
     }
 }
 
@@ -76,7 +88,7 @@ fun TimerScreen(viewModel: TimerViewModel) {
 
     TimerControlView(
         timeLeftInMillis = timeLeftInMillis,
-        changeRunningState = { viewModel.isTimerRunning = it },
+        changeRunningState = { viewModel.switchTimerRunning() },
         changeStartTime = { viewModel.startTime = it }
     )
 }
@@ -84,50 +96,40 @@ fun TimerScreen(viewModel: TimerViewModel) {
 @Composable
 fun TimerControlView(
     timeLeftInMillis: TimerStatus,
-    changeRunningState: (Boolean) -> Unit,
+    changeRunningState: () -> Unit,
     changeStartTime: (Long) -> Unit
 ) {
-    Column(modifier = Modifier.padding(16.dp)) {
-        Text(
-            text = "Time left is: , $timeLeftInMillis",
-            modifier = Modifier.padding(bottom = 8.dp),
-            style = MaterialTheme.typography.h5
-        )
-        OutlinedTextField(
-            value = timeLeftInMillis.toString(),
-            onValueChange = { changeStartTime(10000L) },
-            label = { Text("Change Time") }
-        )
-        Button(onClick = {}) {
-            Row() {
-                val icon =
-                    Icon(
-                        if (timeLeftInMillis.isTimerRunning) Icons.Filled.PauseCircleOutline else Icons.Filled.PlayCircleOutline,
-                        contentDescription = null
-                    )
-                Text(" Adopt Now")
+    Card(
+        elevation = 8.dp, shape = RoundedCornerShape(10.dp),
+        modifier = Modifier
+            //.clickable(onClick = onClick)
+            .padding(start = 16.dp, end = 16.dp, top = 8.dp, bottom = 8.dp)
+            .fillMaxWidth()
+    ) {
+        Column(modifier = Modifier.padding(16.dp)) {
+            Text(
+                text = "Time left is: , $timeLeftInMillis",
+                modifier = Modifier.padding(bottom = 8.dp),
+                style = MaterialTheme.typography.h5
+            )
+            OutlinedTextField(
+                value = timeLeftInMillis.toString(),
+                onValueChange = { changeStartTime(10000L) },
+                label = { Text("Change Time") }
+            )
+            Button(onClick = { changeRunningState() }) {
+                Row {
+                    val icon =
+                        Icon(
+                            if (timeLeftInMillis.isTimerRunning) Icons.Filled.PauseCircleOutline else Icons.Filled.PlayCircleOutline,
+                            contentDescription = null
+                        )
+                    Text(if (timeLeftInMillis.isTimerRunning) "Pause" else "Start")
+                }
             }
         }
     }
 }
-
-
-@Composable
-fun HelloContent2(name: String, onNameChange: (String) -> Unit) {
-    Column(modifier = Modifier.padding(16.dp)) {
-        Text(
-            text = "Hello, $name",
-            modifier = Modifier.padding(bottom = 8.dp),
-            style = MaterialTheme.typography.h5
-        )
-        OutlinedTextField(
-            value = name,
-            onValueChange = { onNameChange(it) },
-            label = { Text("Name") }
-        )
-    }
-}
-
 
 @Composable
 fun SandClock() {
