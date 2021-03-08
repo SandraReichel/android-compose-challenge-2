@@ -14,16 +14,19 @@ class TimerViewModel : ViewModel() {
 
     var startTime = 10000L
     private val interval = 1000L
-    private var isTimerRunning = false
     var countDownTimer: CountDownTimer
 
-    private var _timeLeftInMilli = MutableLiveData(TimerStatus(startTime, false))
-    val timeLeftInMills: LiveData<TimerStatus> = _timeLeftInMilli
+    private var _timeLeftInMilli = MutableLiveData(startTime)
+    val timeLeftInMills: LiveData<Long> = _timeLeftInMilli
+
+    private var _isTimerRunning = MutableLiveData(false)
+    val isTimerRunning: LiveData<Boolean> = _isTimerRunning
 
     init {
         countDownTimer = object : CountDownTimer(startTime, interval) {
             override fun onTick(millisUntilFinished: Long) {
-                _timeLeftInMilli.postValue(_timeLeftInMilli.value?.apply { currentTime = millisUntilFinished / interval })
+                //_isTimerRunning.postValue((millisUntilFinished / interval).toInt() % 2 == 0)
+                _timeLeftInMilli.postValue(millisUntilFinished / interval)
             }
 
             override fun onFinish() {
@@ -33,14 +36,12 @@ class TimerViewModel : ViewModel() {
     }
 
     fun switchTimerRunning() {
-        _timeLeftInMilli.value?.apply {
-            if (isTimerRunning) {
-                countDownTimer.cancel()
-                _timeLeftInMilli.postValue(TimerStatus(this.currentTime, false))
-            } else {
-                countDownTimer.start()
-                _timeLeftInMilli.postValue(TimerStatus(this.currentTime, true))
-            }
+        if (_isTimerRunning.value == true) {
+            countDownTimer.cancel()
+            _isTimerRunning.postValue(false)
+        } else {
+            countDownTimer.start()
+            _isTimerRunning.postValue(true)
         }
     }
 }

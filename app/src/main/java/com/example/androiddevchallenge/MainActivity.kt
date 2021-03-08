@@ -77,24 +77,27 @@ fun MyApp(viewModel: TimerViewModel) {
 @Composable
 fun TimerScreen(viewModel: TimerViewModel) {
     val timeLeftInMillis by viewModel.timeLeftInMills.observeAsState(
-        TimerStatus(
-            viewModel.startTime,
-            false
+
+            viewModel.startTime
+
         )
-    )
+
+    val running by viewModel.isTimerRunning.observeAsState(true)
 
     TimerControlView(
         timeLeftInMillis = timeLeftInMillis,
         changeRunningState = { viewModel.switchTimerRunning() },
-        changeStartTime = { viewModel.startTime = it }
+        changeStartTime = { viewModel.startTime = it },
+        running
     )
 }
 
 @Composable
 fun TimerControlView(
-    timeLeftInMillis: TimerStatus,
+    timeLeftInMillis: Long,
     changeRunningState: () -> Unit,
-    changeStartTime: (Long) -> Unit
+    changeStartTime: (Long) -> Unit,
+    running: Boolean
 ) {
     Card(
         elevation = 8.dp, shape = RoundedCornerShape(10.dp),
@@ -105,13 +108,13 @@ fun TimerControlView(
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
             Text(
-                text = "Time left is: , ${timeLeftInMillis.currentTime}",
+                text = "Time left is: , ${timeLeftInMillis}",
                 modifier = Modifier.padding(bottom = 8.dp),
                 style = MaterialTheme.typography.h5
             )
             Spacer(Modifier.padding(8.dp))
             OutlinedTextField(
-                value = timeLeftInMillis.currentTime.toString(),
+                value = "10000",
                 onValueChange = { changeStartTime(10000L) },
                 label = { Row() {
                     Text("Change Time")
@@ -124,12 +127,11 @@ fun TimerControlView(
             Spacer(Modifier.padding(8.dp))
             Button(onClick = { changeRunningState() }) {
                 Row {
-                    val icon =
                         Icon(
-                            if (timeLeftInMillis.isTimerRunning) Icons.Filled.PauseCircleOutline else Icons.Filled.PlayCircleOutline,
+                            if (running) Icons.Filled.PauseCircleOutline else Icons.Filled.PlayCircleOutline,
                             contentDescription = null
                         )
-                    Text(if (timeLeftInMillis.isTimerRunning) "Pause" else "Start")
+                    Text(if (running) "Pause" else "Start")
                 }
             }
         }
