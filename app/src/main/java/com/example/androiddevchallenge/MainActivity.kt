@@ -45,54 +45,33 @@ import androidx.compose.runtime.*
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.ViewModelProvider
 
 
 class MainActivity : AppCompatActivity() {
+
+    val timerViewModel = ViewModelProvider(this).get(TimerViewModel::class.java)
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
             MyTheme {
-                MyApp()
+                TimerApp(timerViewModel)
             }
         }
     }
 }
 
-class HelloViewModel : ViewModel() {
-    private val _name = MutableLiveData("")
-    val name: LiveData<String> = _name
-
-    fun onNameChange(newName: String) {
-        _name.value = newName
-    }
-}
-
 @Composable
-fun HelloScreen(helloViewModel: HelloViewModel = HelloViewModel()) {
-    val name by helloViewModel.name.observeAsState("")
-    HelloContent(name = name, onNameChange = { helloViewModel.onNameChange(it) })
+fun HelloScreen(viewModel: TimerViewModel) {
+    val name by viewModel.name.observeAsState("")
+    HelloContent(name = name, onNameChange = { viewModel.onNameChange(it) })
 }
 
 @Composable
 fun HelloScreen2() {
 
-    var name by rememberSaveable { mutableStateOf("") }
-
-    var startTime = 10000L
-    var interval = 1000L
-
     var timeLeftInMills by rememberSaveable { mutableStateOf(startTime) }
-
-
-    object : CountDownTimer(startTime, interval) {
-        override fun onTick(millisUntilFinished: Long) {
-            timeLeftInMills = millisUntilFinished / interval
-        }
-
-        override fun onFinish() {
-            //mTextField.setText("done!")
-        }
-    }.start()
 
     HelloContent(name = timeLeftInMills.toString(), onNameChange = { name = it })
 }
