@@ -26,20 +26,26 @@ import androidx.compose.material.MaterialTheme
 import androidx.compose.material.OutlinedTextField
 import androidx.compose.material.Surface
 import androidx.compose.material.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.setValue
 
 import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.livedata.observeAsState
+import androidx.compose.runtime.getValue
 
+import androidx.compose.runtime.mutableStateOf
+
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.example.androiddevchallenge.ui.theme.MyTheme
+import android.os.CountDownTimer
+import androidx.compose.runtime.*
+import androidx.lifecycle.LiveData
+import androidx.lifecycle.MutableLiveData
+import androidx.lifecycle.ViewModel
+
 
 class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -52,16 +58,44 @@ class MainActivity : AppCompatActivity() {
     }
 }
 
+class HelloViewModel : ViewModel() {
+    private val _name = MutableLiveData("")
+    val name: LiveData<String> = _name
 
+    fun onNameChange(newName: String) {
+        _name.value = newName
+    }
+}
 
 @Composable
-fun HelloScreen() {
+fun HelloScreen(helloViewModel: HelloViewModel = HelloViewModel()) {
+    val name by helloViewModel.name.observeAsState("")
+    HelloContent(name = name, onNameChange = { helloViewModel.onNameChange(it) })
+}
+
+@Composable
+fun HelloScreen2() {
 
     var name by rememberSaveable { mutableStateOf("") }
 
-    //HelloContent(name = name, onNameChange = { name = it })
-}
+    var startTime = 10000L
+    var interval = 1000L
 
+    var timeLeftInMills by rememberSaveable { mutableStateOf(startTime) }
+
+
+    object : CountDownTimer(startTime, interval) {
+        override fun onTick(millisUntilFinished: Long) {
+            timeLeftInMills = millisUntilFinished / interval
+        }
+
+        override fun onFinish() {
+            //mTextField.setText("done!")
+        }
+    }.start()
+
+    HelloContent(name = timeLeftInMills.toString(), onNameChange = { name = it })
+}
 
 @Composable
 fun HelloContent(name: String, onNameChange: (String) -> Unit) {
@@ -76,6 +110,23 @@ fun HelloContent(name: String, onNameChange: (String) -> Unit) {
             onValueChange = { onNameChange(it) },
             label = { Text("Name") }
         )
+    }
+}
+
+
+@Composable
+fun HelloContent2(name: String, onNameChange: (String) -> Unit) {
+    Column(modifier = Modifier.padding(16.dp)) {
+        Text(
+            text = "Hello, $name",
+            modifier = Modifier.padding(bottom = 8.dp),
+            style = MaterialTheme.typography.h5
+        )
+        /*OutlinedTextField(
+            value = name,
+            onValueChange = { onNameChange(it) },
+            label = { Text("Name") }
+        )*/
     }
 }
 
