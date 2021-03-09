@@ -16,6 +16,7 @@
 package com.example.androiddevchallenge
 
 import android.os.Bundle
+import android.view.Gravity
 import androidx.activity.compose.setContent
 import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.animation.*
@@ -23,6 +24,7 @@ import androidx.compose.animation.core.*
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement.Absolute.Center
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
@@ -85,9 +87,7 @@ fun MyApp(viewModel: TimerViewModel) {
                 }
             )
 
-
-                var panelVisible by rememberSaveable { mutableStateOf(false) }
-
+            var panelVisible by rememberSaveable { mutableStateOf(false) }
             Button(onClick = { panelVisible = !panelVisible }) {
                 Row {
                     Icon(Icons.Filled.Settings, contentDescription = null)
@@ -95,36 +95,25 @@ fun MyApp(viewModel: TimerViewModel) {
                 }
             }
 
-
-                AnimatedVisibility(
-                    visible = panelVisible,
-                    enter = slideInVertically(
-                        // Enters by sliding down from offset -fullHeight to 0.
-                        initialOffsetY = { fullHeight -> -fullHeight },
-                        animationSpec = tween(durationMillis = 500, easing = LinearOutSlowInEasing)
-                    ),
-                    exit = slideOutVertically(
-                        // Exits by sliding up from offset 0 to -fullHeight.
-                        targetOffsetY = { fullHeight -> -fullHeight },
-                        animationSpec = tween(durationMillis = 250, easing = FastOutLinearInEasing)
-                    )
-                ) {
-                    TimerScreen(viewModel = viewModel)
-                }
+            AnimatedVisibility(
+                visible = panelVisible,
+                enter = slideInVertically(
+                    initialOffsetY = { fullHeight -> -fullHeight },
+                    animationSpec = tween(durationMillis = 250, easing = LinearOutSlowInEasing)
+                ),
+                exit = slideOutVertically(
+                    targetOffsetY = { fullHeight -> -fullHeight },
+                    animationSpec = tween(durationMillis = 250, easing = FastOutLinearInEasing)
+                )
+            ) {
+                TimerScreen(viewModel = viewModel)
+            }
 
             val alpha: Float by animateFloatAsState(if (panelVisible) 1f else 0.5f)
-            /*Box(
-                Modifier.fillMaxSize()
-                    .graphicsLayer(alpha = alpha)
-                    .background(Color.Red)
-            )*/
 
-
-                SandController(alpha)
-
-
-
-
+            Box(modifier = Modifier, contentAlignment = Alignment.Center) {
+                SandClock(rotateValue = alpha)
+            }
         }
     }
 }
@@ -156,12 +145,12 @@ fun TimerControlView(
     Card(
         elevation = 8.dp, shape = RoundedCornerShape(10.dp),
         modifier = Modifier
-            //.clickable(onClick = onClick)
             .padding(start = 16.dp, end = 16.dp, top = 8.dp, bottom = 8.dp)
             .fillMaxWidth()
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
-            val timeString = timeLeftInMillis.minutes.toString() + ":"  + timeLeftInMillis.seconds.toString()
+            val timeString =
+                timeLeftInMillis.minutes.toString() + ":" + timeLeftInMillis.seconds.toString()
 
             Text(
                 text = "Time left is: , $timeString",
@@ -172,21 +161,23 @@ fun TimerControlView(
             OutlinedTextField(
                 value = "10000",
                 onValueChange = { changeStartTime(10000L) },
-                label = { Row() {
-                    Text("Change Time")
-                    Icon(
-                        Icons.Filled.Check,
-                        contentDescription = null
-                    )
-                } }
+                label = {
+                    Row() {
+                        Text("Change Time")
+                        Icon(
+                            Icons.Filled.Check,
+                            contentDescription = null
+                        )
+                    }
+                }
             )
             Spacer(Modifier.padding(8.dp))
             Button(onClick = { changeRunningState() }) {
                 Row {
-                        Icon(
-                            if (running) Icons.Filled.PauseCircleOutline else Icons.Filled.PlayCircleOutline,
-                            contentDescription = null
-                        )
+                    Icon(
+                        if (running) Icons.Filled.PauseCircleOutline else Icons.Filled.PlayCircleOutline,
+                        contentDescription = null
+                    )
                     Text(if (running) "Pause" else "Start")
                 }
             }
@@ -194,71 +185,82 @@ fun TimerControlView(
     }
 }
 
-@Composable 
-fun SandController(turnDegree: Float) {
-    val alpha: Float by animateFloatAsState(1f)
-
-    var progress by remember { mutableStateOf(0.1f) }
-
-    val animatedProgress = animateFloatAsState(progress, animationSpec = infiniteRepeatable(
-        animation = tween(durationMillis = 2000, easing = LinearEasing)))
-
-
-    val animatedProgressInt = animateIntAsState(360
-    , animationSpec = infiniteRepeatable(
-        animation = tween(durationMillis = 10000, easing = LinearEasing)))
-
-
-    val t = animatedProgressInt.value
-
-
-    
-    SandClock(rotateValue = turnDegree)
-}
-
 @Composable
-fun SandClock(rotateValue: Float ) {
+fun SandClock(rotateValue: Float) {
     Text(text = rotateValue.toString())
+
+
 
     Canvas(modifier = Modifier.fillMaxSize()) {
         val canvasWidth = size.width
         val canvasHeight = size.height
 
+        val pointMiddle = Offset(x = canvasWidth / 2, y = canvasHeight / 2)
+        val pointTopLeft = Offset(
+            x = ((canvasWidth / 2) + (canvasWidth / 3)),
+            y = ((canvasHeight / 2) - (canvasHeight / 3))
+        )
+        val pointTopRight = Offset(
+            x = ((canvasWidth / 2) - (canvasWidth / 3)),
+            y = ((canvasHeight / 2) - (canvasHeight / 3))
+        )
+        val pointBottomLeft = Offset(
+            x = ((canvasWidth / 2) + (canvasWidth / 3)),
+            y = ((canvasHeight / 2) + (canvasHeight / 3))
+        )
+        val pointBottomRight = Offset(
+            x = (canvasWidth / 2) - (canvasWidth / 3),
+            y = ((canvasHeight / 2) + (canvasHeight / 3)
+                    ))
+
         withTransform(
-            {
-                rotate(rotateValue*360, Offset(x = canvasWidth / 2, y = canvasHeight / 2))
-            }, {
+            { rotate(rotateValue * 360, pointMiddle) }, {
+
                 drawLine(
-                    strokeWidth = 8.dp.toPx(),
-                    cap = StrokeCap.Round,
-                    color = Color.Red,
-                    start = Offset(x = canvasWidth / 2, y = canvasHeight / 2),
-                    end = Offset(size.minDimension / 2, 12.dp.toPx()))
+                    start = pointMiddle,
+                    end = pointBottomLeft,
+                    color = Color.Blue,
+                    strokeWidth = 10F
+                )
+
+                drawLine(
+                    start = pointMiddle,
+                    end = pointBottomRight,
+                    color = Color.Blue,
+                    strokeWidth = 10F
+                )
+
+                drawLine(
+                    start = pointMiddle,
+                    end = pointTopLeft,
+                    color = Color.Blue,
+                    strokeWidth = 10F
+                )
+
+                drawLine(
+                    start = pointMiddle,
+                    end = pointTopRight,
+                    color = Color.Blue,
+                    strokeWidth = 10F
+                )
+
+                drawLine(
+                start = pointTopRight,
+                end = pointTopLeft,
+                color = Color.Blue,
+                strokeWidth = 10F
+                )
+
+                drawLine(
+                    start = pointBottomLeft,
+                    end = pointBottomRight,
+                    color = Color.Blue,
+                    strokeWidth = 10F
+                )
             }
-        )
-
-        drawLine(
-            start = Offset(x = canvasWidth / 2, y = canvasHeight / 2),
-            end = Offset(
-                x = (canvasWidth / 2) - (canvasWidth / 3),
-                y = ((canvasHeight / 2) + (canvasHeight / 3))
-            ),
-            color = Color.Blue,
-            strokeWidth = 5F
-        )
-
-        drawLine(
-            start = Offset(x = canvasWidth / 2, y = canvasHeight / 2),
-            end = Offset(
-                x = ((canvasWidth / 2) + (canvasWidth / 3)),
-                y = ((canvasHeight / 2) + (canvasHeight / 3))
-            ),
-            color = Color.Blue,
-            strokeWidth = 5F
         )
     }
 }
-
 
 
 @ExperimentalTime
