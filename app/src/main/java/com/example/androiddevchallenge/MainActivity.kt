@@ -27,14 +27,29 @@ import androidx.compose.animation.core.tween
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.Canvas
-import androidx.compose.foundation.layout.*
-
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.*
-
+import androidx.compose.material.Button
+import androidx.compose.material.Card
+import androidx.compose.material.Icon
+import androidx.compose.material.MaterialTheme
+import androidx.compose.material.OutlinedTextField
+import androidx.compose.material.Surface
+import androidx.compose.material.Text
+import androidx.compose.material.TopAppBar
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.*
-
+import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.Error
+import androidx.compose.material.icons.filled.PauseCircleOutline
+import androidx.compose.material.icons.filled.PlayCircleOutline
+import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.filled.Timelapse
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
@@ -52,7 +67,6 @@ import androidx.lifecycle.ViewModelProvider
 import com.example.androiddevchallenge.ui.theme.MyTheme
 import com.example.androiddevchallenge.ui.theme.purple700transparent
 import kotlin.time.ExperimentalTime
-
 
 class MainActivity : AppCompatActivity() {
 
@@ -157,7 +171,6 @@ fun MyApp(viewModel: TimerViewModel) {
                     }
                 }
             }
-
         }
     }
 }
@@ -232,8 +245,9 @@ fun SandClock(
         )
         val pointBottomRight = Offset(
             x = (canvasWidth / 2) - (canvasWidth / 3),
-            y = ((canvasHeight / 2) + (canvasHeight / 3)
-                    )
+            y = (
+                (canvasHeight / 2) + (canvasHeight / 3)
+                )
         )
 
         withTransform({
@@ -250,7 +264,8 @@ fun SandClock(
             {
                 rotate(rotateValue * 360, pointMiddle)
                 scale(0.5F, 0.5F)
-            }, {
+            },
+            {
 
                 drawLine(
                     start = pointMiddle,
@@ -293,12 +308,10 @@ fun SandClock(
                     color = Color.Blue,
                     strokeWidth = 10F
                 )
-
             }
         )
     }
 }
-
 
 @ExperimentalTime
 @ExperimentalAnimationApi
