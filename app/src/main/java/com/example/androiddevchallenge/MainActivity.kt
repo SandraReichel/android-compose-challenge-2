@@ -19,38 +19,38 @@ import android.os.Bundle
 import androidx.activity.compose.setContent
 import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.animation.*
-import androidx.compose.animation.core.FastOutLinearInEasing
-import androidx.compose.animation.core.LinearOutSlowInEasing
-import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.animation.core.tween
+import androidx.compose.animation.core.*
 import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
+import androidx.compose.runtime.*
 import androidx.compose.runtime.livedata.observeAsState
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.withTransform
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.ViewModelProvider
 import com.example.androiddevchallenge.ui.theme.MyTheme
+import kotlin.time.ExperimentalTime
+import kotlin.time.minutes
+import kotlin.time.seconds
 
 
 class MainActivity : AppCompatActivity() {
 
     private lateinit var timerViewModel: TimerViewModel
 
+    @ExperimentalTime
     @ExperimentalAnimationApi
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -66,6 +66,7 @@ class MainActivity : AppCompatActivity() {
 }
 
 // Start building your app here!
+@ExperimentalTime
 @ExperimentalAnimationApi
 @Composable
 fun MyApp(viewModel: TimerViewModel) {
@@ -83,48 +84,68 @@ fun MyApp(viewModel: TimerViewModel) {
                     }
                 }
             )
-            TimerScreen(viewModel = viewModel)
-            SandClock()
+
+
+                var panelVisible by rememberSaveable { mutableStateOf(false) }
+
+            Button(onClick = { panelVisible = !panelVisible }) {
+                Row {
+                    Icon(Icons.Filled.Settings, contentDescription = null)
+                    Text("Setup the Timer")
+                }
+            }
+
+
+                AnimatedVisibility(
+                    visible = panelVisible,
+                    enter = slideInVertically(
+                        // Enters by sliding down from offset -fullHeight to 0.
+                        initialOffsetY = { fullHeight -> -fullHeight },
+                        animationSpec = tween(durationMillis = 500, easing = LinearOutSlowInEasing)
+                    ),
+                    exit = slideOutVertically(
+                        // Exits by sliding up from offset 0 to -fullHeight.
+                        targetOffsetY = { fullHeight -> -fullHeight },
+                        animationSpec = tween(durationMillis = 250, easing = FastOutLinearInEasing)
+                    )
+                ) {
+                    TimerScreen(viewModel = viewModel)
+                }
+
+            val alpha: Float by animateFloatAsState(if (panelVisible) 1f else 0.5f)
+            /*Box(
+                Modifier.fillMaxSize()
+                    .graphicsLayer(alpha = alpha)
+                    .background(Color.Red)
+            )*/
+
+
+                SandController(alpha)
+
+
+
+
         }
     }
 }
 
+@ExperimentalTime
 @ExperimentalAnimationApi
 @Composable
 fun TimerScreen(viewModel: TimerViewModel) {
     val timeLeftInMillis by viewModel.timeLeftInMills.observeAsState(viewModel.startTime)
     val running by viewModel.isTimerRunning.observeAsState(true)
 
-    var panelVisible by rememberSaveable { mutableStateOf(false) }
+    TimerControlView(
+        timeLeftInMillis = timeLeftInMillis,
+        changeRunningState = { viewModel.switchTimerRunning() },
+        changeStartTime = { viewModel.startTime = it },
+        running
+    )
 
-    AnimatedVisibility(
-        visible = panelVisible,
-        enter = slideInVertically(
-            // Enters by sliding down from offset -fullHeight to 0.
-            initialOffsetY = { fullHeight -> -fullHeight },
-            animationSpec = tween(durationMillis = 500, easing = LinearOutSlowInEasing)
-        ),
-        exit = slideOutVertically(
-            // Exits by sliding up from offset 0 to -fullHeight.
-            targetOffsetY = { fullHeight -> -fullHeight },
-            animationSpec = tween(durationMillis = 250, easing = FastOutLinearInEasing)
-        )
-    ) {
-        TimerControlView(
-            timeLeftInMillis = timeLeftInMillis,
-            changeRunningState = { viewModel.switchTimerRunning() },
-            changeStartTime = { viewModel.startTime = it },
-            running
-        )
-    }
-    Button(onClick = { panelVisible = !panelVisible }) {
-        Row {
-            Icon(Icons.Filled.Settings, contentDescription = null)
-            Text("Setup the Timer")
-        }
-    }
 }
 
+@ExperimentalTime
 @Composable
 fun TimerControlView(
     timeLeftInMillis: Long,
@@ -140,8 +161,10 @@ fun TimerControlView(
             .fillMaxWidth()
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
+            val timeString = timeLeftInMillis.minutes.toString() + ":"  + timeLeftInMillis.seconds.toString()
+
             Text(
-                text = "Time left is: , ${timeLeftInMillis}",
+                text = "Time left is: , $timeString",
                 modifier = Modifier.padding(bottom = 8.dp),
                 style = MaterialTheme.typography.h5
             )
@@ -171,30 +194,39 @@ fun TimerControlView(
     }
 }
 
-@Composable
-fun SandClock() {
+@Composable 
+fun SandController(turnDegree: Float) {
     val alpha: Float by animateFloatAsState(1f)
+
+    var progress by remember { mutableStateOf(0.1f) }
+
+    val animatedProgress = animateFloatAsState(progress, animationSpec = infiniteRepeatable(
+        animation = tween(durationMillis = 2000, easing = LinearEasing)))
+
+
+    val animatedProgressInt = animateIntAsState(360
+    , animationSpec = infiniteRepeatable(
+        animation = tween(durationMillis = 10000, easing = LinearEasing)))
+
+
+    val t = animatedProgressInt.value
+
+
+    
+    SandClock(rotateValue = turnDegree)
+}
+
+@Composable
+fun SandClock(rotateValue: Float ) {
+    Text(text = rotateValue.toString())
 
     Canvas(modifier = Modifier.fillMaxSize()) {
         val canvasWidth = size.width
         val canvasHeight = size.height
 
-        /* drawCircle(
-             color = Color.Blue,
-             center = Offset(x = canvasWidth / 2, y = canvasHeight / 2),
-             radius = size.minDimension / 4
-
-         )*/
-
-        var running = true
-
-
-
-
-
         withTransform(
             {
-                rotate( 360*alpha, Offset(x = canvasWidth / 2, y = canvasHeight / 2))
+                rotate(rotateValue*360, Offset(x = canvasWidth / 2, y = canvasHeight / 2))
             }, {
                 drawLine(
                     strokeWidth = 8.dp.toPx(),
@@ -229,6 +261,7 @@ fun SandClock() {
 
 
 
+@ExperimentalTime
 @ExperimentalAnimationApi
 @Preview("Light Theme", widthDp = 360, heightDp = 640)
 @Composable
@@ -238,6 +271,7 @@ fun LightPreview() {
     }
 }
 
+@ExperimentalTime
 @ExperimentalAnimationApi
 @Preview("Dark Theme", widthDp = 360, heightDp = 640)
 @Composable
