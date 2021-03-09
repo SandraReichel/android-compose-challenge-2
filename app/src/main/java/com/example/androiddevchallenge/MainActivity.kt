@@ -35,6 +35,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.scale
@@ -44,6 +45,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.ViewModelProvider
 import com.example.androiddevchallenge.ui.theme.MyTheme
+import com.example.androiddevchallenge.ui.theme.purple700transparent
 import kotlin.time.ExperimentalTime
 import kotlin.time.minutes
 import kotlin.time.seconds
@@ -76,7 +78,7 @@ fun MyApp(viewModel: TimerViewModel) {
     Surface(color = MaterialTheme.colors.background) {
 
         var panelVisible by rememberSaveable { mutableStateOf(false) }
-        val timeLeftInMillis by viewModel.timeLeftInMills.observeAsState(viewModel.startTime)
+        val timeLeftInMillis by viewModel.timeLeftInMills.observeAsState((viewModel.startTime / 1000))
         val running by viewModel.isTimerRunning.observeAsState(true)
 
 
@@ -95,7 +97,8 @@ fun MyApp(viewModel: TimerViewModel) {
             val clockRotation: Float by animateFloatAsState(if (running) 1f else 0.5f,
             animationSpec = tween(3000))
             Box(modifier = Modifier, contentAlignment = Alignment.Center) {
-                SandClock(rotateValue = clockRotation)
+                val progessPercent: Float = timeLeftInMillis.toFloat().div((viewModel.startTime / 1000).toFloat())
+                SandClock(rotateValue = clockRotation, progressInPercent = progessPercent)
             }
         }
 
@@ -112,7 +115,6 @@ fun MyApp(viewModel: TimerViewModel) {
         ) {
 
             TimerControlView(
-                timeLeftInMillis = timeLeftInMillis,
                 changeRunningState = { viewModel.switchTimerRunning() },
                 changeStartTime = { viewModel.startTime = it },
                 running
@@ -125,12 +127,29 @@ fun MyApp(viewModel: TimerViewModel) {
                 .padding(16.dp),
             contentAlignment = Alignment.BottomCenter
         ) {
-            Button(onClick = { panelVisible = !panelVisible }) {
-                Row {
-                    Icon(Icons.Filled.Settings, contentDescription = null)
-                    Text("Setup the Timer")
+            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                val seconds = timeLeftInMillis %60
+                val secondsString = if (seconds < 10) "0$seconds" else seconds.toString()
+                val minutes = (timeLeftInMillis / 60L).toInt()
+
+                val timeString = "$minutes:$secondsString"
+
+                Text(
+                    text = "Time left is:"
+                )
+                Text(
+                    text = timeString,
+                    modifier = Modifier.padding(bottom = 8.dp),
+                    style = MaterialTheme.typography.h2
+                )
+                Button(onClick = { panelVisible = !panelVisible }) {
+                    Row {
+                        Icon(Icons.Filled.Settings, contentDescription = null)
+                        Text("Setup the Timer")
+                    }
                 }
             }
+
         }
     }
 }
@@ -138,7 +157,6 @@ fun MyApp(viewModel: TimerViewModel) {
 @ExperimentalTime
 @Composable
 fun TimerControlView(
-    timeLeftInMillis: Long,
     changeRunningState: () -> Unit,
     changeStartTime: (Long) -> Unit,
     running: Boolean
@@ -151,21 +169,6 @@ fun TimerControlView(
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
 
-            val seconds = (timeLeftInMillis / 1000).rem(60)
-            val minutes = ((timeLeftInMillis / 1000) / 60).toInt()
-
-            val timeString = "$minutes:$seconds"
-
-            Text(
-                text = "Time left is:",
-                modifier = Modifier.padding(bottom = 8.dp),
-                style = MaterialTheme.typography.h5
-            )
-            Text(
-                text = timeString,
-                modifier = Modifier.padding(bottom = 8.dp),
-                style = MaterialTheme.typography.h1
-            )
             Spacer(Modifier.padding(8.dp))
             OutlinedTextField(
                 value = "10000",
@@ -195,7 +198,9 @@ fun TimerControlView(
 }
 
 @Composable
-fun SandClock(rotateValue: Float) {
+fun SandClock(rotateValue: Float,
+              progressInPercent: Float) {
+
     Canvas(modifier = Modifier.fillMaxSize()) {
         val canvasWidth = size.width
         val canvasHeight = size.height
@@ -218,6 +223,16 @@ fun SandClock(rotateValue: Float) {
             y = ((canvasHeight / 2) + (canvasHeight / 3)
                     )
         )
+
+        withTransform({
+            scale(1F, progressInPercent)
+        }) {
+            drawRect(
+                color = purple700transparent,
+                topLeft = Offset(x = canvasWidth / 3F, y = canvasHeight / 3F),
+                size = size / 3F
+            )
+        }
 
         withTransform(
             {
@@ -266,6 +281,7 @@ fun SandClock(rotateValue: Float) {
                     color = Color.Blue,
                     strokeWidth = 10F
                 )
+
             }
         )
     }
