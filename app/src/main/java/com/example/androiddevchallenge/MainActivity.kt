@@ -37,6 +37,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.drawscope.scale
 import androidx.compose.ui.graphics.drawscope.withTransform
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.tooling.preview.Preview
@@ -72,66 +73,66 @@ class MainActivity : AppCompatActivity() {
 @ExperimentalAnimationApi
 @Composable
 fun MyApp(viewModel: TimerViewModel) {
-
-    //val backgroundColor by animateColorAsState(if (tabPage == TabPage.Home) Purple100 else Green300)
     Surface(color = MaterialTheme.colors.background) {
+
+        var panelVisible by rememberSaveable { mutableStateOf(false) }
+        val timeLeftInMillis by viewModel.timeLeftInMills.observeAsState(viewModel.startTime)
+        val running by viewModel.isTimerRunning.observeAsState(true)
+
+
         Column(
             horizontalAlignment = Alignment.End, modifier = Modifier.fillMaxWidth()
         ) {
             TopAppBar(
                 title = {
                     Row {
-                        Text(text = "Flippy, Sandy Timer")
+                        Text(text = "Sandy Timer ")
                         Icon(Icons.Filled.Timelapse, contentDescription = null)
                     }
                 }
             )
 
-            var panelVisible by rememberSaveable { mutableStateOf(false) }
+            val clockRotation: Float by animateFloatAsState(if (running) 1f else 0.5f,
+            animationSpec = tween(3000))
+            Box(modifier = Modifier, contentAlignment = Alignment.Center) {
+                SandClock(rotateValue = clockRotation)
+            }
+        }
+
+        AnimatedVisibility(
+            visible = panelVisible,
+            enter = slideInVertically(
+                initialOffsetY = { fullHeight -> -fullHeight },
+                animationSpec = tween(durationMillis = 250, easing = LinearOutSlowInEasing)
+            ),
+            exit = slideOutVertically(
+                targetOffsetY = { fullHeight -> -fullHeight },
+                animationSpec = tween(durationMillis = 250, easing = FastOutLinearInEasing)
+            )
+        ) {
+
+            TimerControlView(
+                timeLeftInMillis = timeLeftInMillis,
+                changeRunningState = { viewModel.switchTimerRunning() },
+                changeStartTime = { viewModel.startTime = it },
+                running
+            )
+        }
+
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(16.dp),
+            contentAlignment = Alignment.BottomCenter
+        ) {
             Button(onClick = { panelVisible = !panelVisible }) {
                 Row {
                     Icon(Icons.Filled.Settings, contentDescription = null)
                     Text("Setup the Timer")
                 }
             }
-
-            AnimatedVisibility(
-                visible = panelVisible,
-                enter = slideInVertically(
-                    initialOffsetY = { fullHeight -> -fullHeight },
-                    animationSpec = tween(durationMillis = 250, easing = LinearOutSlowInEasing)
-                ),
-                exit = slideOutVertically(
-                    targetOffsetY = { fullHeight -> -fullHeight },
-                    animationSpec = tween(durationMillis = 250, easing = FastOutLinearInEasing)
-                )
-            ) {
-                TimerScreen(viewModel = viewModel)
-            }
-
-            val alpha: Float by animateFloatAsState(if (panelVisible) 1f else 0.5f)
-
-            Box(modifier = Modifier, contentAlignment = Alignment.Center) {
-                SandClock(rotateValue = alpha)
-            }
         }
     }
-}
-
-@ExperimentalTime
-@ExperimentalAnimationApi
-@Composable
-fun TimerScreen(viewModel: TimerViewModel) {
-    val timeLeftInMillis by viewModel.timeLeftInMills.observeAsState(viewModel.startTime)
-    val running by viewModel.isTimerRunning.observeAsState(true)
-
-    TimerControlView(
-        timeLeftInMillis = timeLeftInMillis,
-        changeRunningState = { viewModel.switchTimerRunning() },
-        changeStartTime = { viewModel.startTime = it },
-        running
-    )
-
 }
 
 @ExperimentalTime
@@ -149,13 +150,21 @@ fun TimerControlView(
             .fillMaxWidth()
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
-            val timeString =
-                timeLeftInMillis.minutes.toString() + ":" + timeLeftInMillis.seconds.toString()
+
+            val seconds = (timeLeftInMillis / 1000).rem(60)
+            val minutes = ((timeLeftInMillis / 1000) / 60).toInt()
+
+            val timeString = "$minutes:$seconds"
 
             Text(
-                text = "Time left is: , $timeString",
+                text = "Time left is:",
                 modifier = Modifier.padding(bottom = 8.dp),
                 style = MaterialTheme.typography.h5
+            )
+            Text(
+                text = timeString,
+                modifier = Modifier.padding(bottom = 8.dp),
+                style = MaterialTheme.typography.h1
             )
             Spacer(Modifier.padding(8.dp))
             OutlinedTextField(
@@ -187,10 +196,6 @@ fun TimerControlView(
 
 @Composable
 fun SandClock(rotateValue: Float) {
-    Text(text = rotateValue.toString())
-
-
-
     Canvas(modifier = Modifier.fillMaxSize()) {
         val canvasWidth = size.width
         val canvasHeight = size.height
@@ -211,10 +216,14 @@ fun SandClock(rotateValue: Float) {
         val pointBottomRight = Offset(
             x = (canvasWidth / 2) - (canvasWidth / 3),
             y = ((canvasHeight / 2) + (canvasHeight / 3)
-                    ))
+                    )
+        )
 
         withTransform(
-            { rotate(rotateValue * 360, pointMiddle) }, {
+            {
+                rotate(rotateValue * 360, pointMiddle)
+                scale(0.5F, 0.5F)
+            }, {
 
                 drawLine(
                     start = pointMiddle,
@@ -245,10 +254,10 @@ fun SandClock(rotateValue: Float) {
                 )
 
                 drawLine(
-                start = pointTopRight,
-                end = pointTopLeft,
-                color = Color.Blue,
-                strokeWidth = 10F
+                    start = pointTopRight,
+                    end = pointTopLeft,
+                    color = Color.Blue,
+                    strokeWidth = 10F
                 )
 
                 drawLine(
